@@ -8,8 +8,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         :root {
-            --verde-acido: #ADFF2F;
-            --nero: #000000;
+            --verde-acido: #CDFF00;
+            --nero: #1a1a1a;
             --grigio-chiaro: #f5f5f5;
             --grigio-scuro: #333333;
         }
@@ -836,8 +836,15 @@
         
         // Carica/Salva configurazione
         function loadConfig() {
-            const saved = localStorage.getItem('materika_config');
-            if (saved) CONFIG_GLOBALE = JSON.parse(saved);
+            const saved = localStorage.getItem('materika_config_globale');
+            if (saved) {
+                try {
+                    CONFIG_GLOBALE = JSON.parse(saved);
+                    console.log('✅ Configurazione caricata da localStorage');
+                } catch (e) {
+                    console.error('❌ Errore caricamento config:', e);
+                }
+            }
         }
         
         function saveConfig() {
@@ -846,11 +853,11 @@
                 const sizeKB = (configStr.length / 1024).toFixed(2);
                 console.log(`💾 Salvataggio config (${sizeKB}KB)...`);
                 
-                localStorage.setItem('materika_config', configStr);
+                localStorage.setItem('materika_config_globale', configStr);
                 console.log('✅ Config salvata in localStorage');
                 
                 // Test rilettura immediata
-                const test = localStorage.getItem('materika_config');
+                const test = localStorage.getItem('materika_config_globale');
                 if (test) {
                     console.log('✅ Config riletta correttamente');
                 } else {
@@ -1660,7 +1667,11 @@
             const inputPiste = document.getElementById('input_piste');
             const nPiste = parseInt(inputPiste.value);
             
-            if (!PREVENTIVO_CORRENTE || nPiste < 1 || nPiste > 4) return;
+            if (!PREVENTIVO_CORRENTE || nPiste < 1) {
+                alert('⚠️ Il numero di piste deve essere almeno 1');
+                inputPiste.value = PREVENTIVO_CORRENTE?.risultato?.configurazione?.nPiste || 1;
+                return;
+            }
             
             const config = PREVENTIVO_CORRENTE.risultato.configurazione;
             const data = PREVENTIVO_CORRENTE.data;
@@ -1673,11 +1684,18 @@
             }
             
             const larghezzaBobina = dimensioneBobina * nPiste;
+            const limiteMacchina = config.machineObj.larghezza_max;
+            const maxPisteConsentite = Math.floor(limiteMacchina / dimensioneBobina);
             
-            if (larghezzaBobina > config.machineObj.larghezza_max) {
-                alert(`⚠️ Con ${nPiste} piste la bobina sarebbe ${larghezzaBobina}cm, oltre il limite della macchina (${config.machineObj.larghezza_max}cm)`);
-                inputPiste.value = config.nPiste;
-                return;
+            // WARNING invece di blocco se supera limite macchina
+            if (larghezzaBobina > limiteMacchina) {
+                console.warn(`⚠️ ATTENZIONE: ${nPiste} piste (${larghezzaBobina.toFixed(1)}cm) supera limite macchina ${config.machineObj.nome} (${limiteMacchina}cm)`);
+                console.warn(`   Massimo consigliato: ${maxPisteConsentite} piste`);
+                
+                if (!confirm(`⚠️ ATTENZIONE!\n\nCon ${nPiste} piste la bobina sarà ${larghezzaBobina.toFixed(1)}cm\nLa macchina ${config.machineObj.nome} ha limite ${limiteMacchina}cm\n\n🔧 Massimo consigliato: ${maxPisteConsentite} piste\n\n❓ Vuoi procedere comunque con ${nPiste} piste?\n(Potrebbe richiedere lavorazione esterna o macchina diversa)`)) {
+                    inputPiste.value = config.nPiste;
+                    return;
+                }
             }
             
             let fonte;
@@ -1910,7 +1928,7 @@
                         <div class="config-row">
                             <span class="config-label">🎯 Numero Piste</span>
                             <span class="config-value">
-                                <input type="number" id="input_piste" value="${config.nPiste}" min="1" max="4" onchange="cambiaPiste()"> piste
+                                <input type="number" id="input_piste" value="${config.nPiste}" min="1" onchange="cambiaPiste()" style="width: 80px;"> piste
                             </span>
                         </div>
                         <div class="config-row">
@@ -2914,6 +2932,15 @@ html += `
                         console.log('🔄 Aggiornamento dropdown materiali...');
                         popolaMaterialiDropdown();
                         console.log('   ✅ Dropdown aggiornati');
+
+                        // SALVA IN LOCALSTORAGE
+                        console.log('💾 Salvataggio configurazione in localStorage...');
+                        try {
+                            localStorage.setItem('materika_config_globale', JSON.stringify(CONFIG_GLOBALE));
+                            console.log('   ✅ Configurazione salvata in localStorage');
+                        } catch (e) {
+                            console.warn('⚠️ Impossibile salvare in localStorage:', e);
+                        }
 
                         console.log('🎉 ===== SAVEBACKEND COMPLETATO =====');
                         alert('✅ Configurazione salvata con successo!');
@@ -4524,9 +4551,101 @@ function aggiornaMargine(percMargine, prezzoBase, quantitaPz) {
 }
 
 function aggiornaPrezzoFinalePz(prezzoPz, quantitaPz) {
-    const totale = prezzoPz * quantitaPz;
-    const per1000 = prezzoPz * 1000;
+    const prezzoPzNum = parseFloat(prezzoPz);
+    
+    if (isNaN(prezzoPzNum) || prezzoPzNum <= 0) {
+        alert('⚠️ Inserisci un prezzo valido');
+        return;
+    }
+    
+    const totale = prezzoPzNum * quantitaPz;
+    const per1000 = prezzoPzNum * 1000;
+    
+    console.log(`💰 Prezzo personalizzato: ${prezzoPzNum.toFixed(4)}€/pz → Totale: ${totale.toFixed(2)}€`);
+    
+    // 1. Aggiorna display totale custom
     document.getElementById('totale_custom_pz').innerHTML = `Totale: ${totale.toFixed(2)}€ | Per 1000pz: ${per1000.toFixed(2)}€`;
+    
+    // 2. Aggiorna TOTALE PREVENTIVO principale
+    const totaleBaseDisplay = document.getElementById('totale_base_display');
+    if (totaleBaseDisplay) {
+        totaleBaseDisplay.textContent = totale.toFixed(2) + '€';
+    }
+    
+    // 3. Aggiorna box PREZZO FINALE
+    const prezzoFinaleElement = document.getElementById('prezzo_finale_margine');
+    const prezzoCadElement = document.getElementById('prezzo_cad_finale');
+    const prezzoPzFinaleElement = document.getElementById('prezzo_pz_finale');
+    const prezzo1000pzElement = document.getElementById('prezzo_1000pz_finale');
+    
+    if (prezzoFinaleElement) prezzoFinaleElement.textContent = totale.toFixed(2) + '€';
+    if (prezzoCadElement) prezzoCadElement.textContent = prezzoPzNum.toFixed(4) + '€/pz';
+    if (prezzoPzFinaleElement) prezzoPzFinaleElement.textContent = prezzoPzNum.toFixed(4) + '€/pz';
+    if (prezzo1000pzElement) prezzo1000pzElement.textContent = per1000.toFixed(2) + '€';
+    
+    // 4. Aggiorna ULTIMO_PREVENTIVO per il carrello
+    if (ULTIMO_PREVENTIVO) {
+        ULTIMO_PREVENTIVO.risultato.prezzi.prezzoPz = prezzoPzNum;
+        ULTIMO_PREVENTIVO.risultato.prezzi.prezzoTotale = totale;
+        ULTIMO_PREVENTIVO.risultato.prezzi.prezzo1000pz = per1000;
+        
+        // Ricalcola margine con nuovo prezzo
+        const costi = ULTIMO_PREVENTIVO.risultato.costi;
+        if (costi && costi.costoTotale) {
+            const margineEuro = totale - costi.costoTotale;
+            const marginePerc = (margineEuro / costi.costoTotale) * 100;
+            ULTIMO_PREVENTIVO.risultato.indicatori.marginePerc = marginePerc;
+            
+            // Aggiorna display margine
+            const margineElement = document.getElementById('margine_attuale');
+            if (margineElement) {
+                margineElement.textContent = marginePerc.toFixed(1) + '%';
+            }
+            
+            console.log(`   📊 Margine aggiornato: ${marginePerc.toFixed(1)}% (${margineEuro.toFixed(2)}€)`);
+        }
+        
+        // Aggiorna margine cliente se presente
+        const margineClienteBox = document.getElementById('margine_cliente_box');
+        if (margineClienteBox && ULTIMO_PREVENTIVO.inputData.prezzoCliente > 0) {
+            const inputData = ULTIMO_PREVENTIVO.inputData;
+            const tipo = inputData.prezzoClienteTipo;
+            const prezzoClienteTotale = tipo === 'kg' ? 
+                (inputData.prezzoCliente * inputData.quantitaKg) : 
+                (inputData.prezzoCliente * inputData.quantitaPz);
+            
+            const margineClienteEuro = prezzoClienteTotale - totale;
+            const margineClientePerc = (margineClienteEuro / totale) * 100;
+            const bgColor = margineClientePerc >= 0 ? '#4caf50' : '#f44336';
+            const icon = margineClientePerc >= 0 ? '📈' : '📉';
+            
+            const percElement = document.getElementById('margine_cliente_perc');
+            const euroElement = document.getElementById('margine_cliente_euro');
+            const msgElement = document.getElementById('margine_cliente_msg');
+            const euroMsgElement = document.getElementById('margine_cliente_euro_msg');
+            
+            if (percElement) {
+                percElement.textContent = `${icon} ${margineClientePerc >= 0 ? '+' : ''}${margineClientePerc.toFixed(1)}%`;
+                percElement.style.color = bgColor;
+            }
+            if (euroElement) {
+                euroElement.textContent = `${margineClienteEuro >= 0 ? '+' : ''}${margineClienteEuro.toFixed(2)}€`;
+            }
+            if (euroMsgElement) {
+                euroMsgElement.style.color = bgColor;
+            }
+            if (msgElement) {
+                const msg = margineClientePerc >= 30 ? 'Ottimo!' : 
+                           margineClientePerc >= 15 ? 'Buono' : 
+                           margineClientePerc >= 0 ? 'Basso' : 'Perdita!';
+                msgElement.textContent = msg;
+            }
+            
+            console.log(`   💼 Margine Cliente aggiornato: ${margineClientePerc.toFixed(1)}%`);
+        }
+        
+        console.log('✅ ULTIMO_PREVENTIVO aggiornato con prezzo personalizzato');
+    }
 }
 
 // Carica carrello all'avvio
