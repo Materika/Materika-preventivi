@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preventivatore Film Estensibile v1.2</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#0f766e;--secondary:#0d9488;--accent:#10b981;--warning:#f59e0b;--danger:#ef4444;}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#134e4a 0%,#0f766e 100%);min-height:100vh;padding:20px;}
+.container{max-width:1400px;margin:0 auto}
+.header{background:#fff;padding:30px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.1);margin-bottom:30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;}
+.header-left{flex:1}
+.header h1{color:var(--primary);font-size:2.4em;margin-bottom:8px}
+.header .version{color:var(--secondary);font-size:1em;font-weight:600}
+.cart-button{padding:14px 28px;background:var(--accent);color:#fff;border:none;border-radius:12px;cursor:pointer;font-size:1.05em;font-weight:600;box-shadow:0 4px 6px rgba(0,0,0,0.1);transition:all 0.3s;display:flex;align-items:center;gap:10px;}
+.cart-button:hover{transform:translateY(-2px);}
+.cart-count{background:#fff;color:var(--accent);padding:4px 11px;border-radius:20px;font-weight:700;font-size:1.1em;}
+.tabs{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap}
+.tab{flex:1;min-width:140px;padding:14px 20px;background:rgba(255,255,255,0.9);border:none;border-radius:12px;cursor:pointer;font-size:1em;font-weight:600;transition:all 0.3s;box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+.tab.active{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff}
+.tab-content{display:none;animation:fadeIn 0.4s}
+.tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:#fff;padding:28px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,0.1);margin-bottom:28px;}
+.card h2{color:var(--primary);margin-bottom:18px;font-size:1.7em;border-bottom:3px solid var(--accent);padding-bottom:10px;}
+.card h3{color:var(--secondary);margin:18px 0 12px;font-size:1.2em;}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;margin-bottom:18px}
+.form-group{margin-bottom:18px}
+label{display:block;color:#374151;font-weight:600;margin-bottom:7px;font-size:1em;}
+input,select{width:100%;padding:11px 15px;border:2px solid #e5e7eb;border-radius:8px;font-size:1em;transition:border-color 0.3s;}
+input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,0.1);}
+.btn{padding:14px 28px;border:none;border-radius:12px;font-size:1.05em;font-weight:600;cursor:pointer;transition:all 0.3s;box-shadow:0 4px 6px rgba(0,0,0,0.1);width:100%;margin-top:10px;}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-success{background:var(--accent);color:#fff}
+.btn-success:hover{background:#059669;transform:translateY(-2px)}
+.btn-danger{background:var(--danger);color:#fff}
+.alert{padding:14px 18px;border-radius:10px;margin:12px 0;font-weight:500;border-left:4px solid;}
+.alert-success{background:#d1fae5;color:#065f46;border-color:var(--accent)}
+.alert-warning{background:#fef3c7;color:#92400e;border-color:var(--warning)}
+.alert-info{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+.alert-danger{background:#fee2e2;color:#991b1b;border-color:var(--danger)}
+/* Configuratore */
+.config-step{background:#f9fafb;border-radius:12px;padding:22px;margin-bottom:18px;border:2px solid #e5e7eb;}
+.config-step.disabled{opacity:0.45;pointer-events:none}
+.config-step-title{font-weight:700;color:var(--primary);margin-bottom:13px;font-size:1.1em;}
+.option-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;}
+.option-btn{padding:13px 8px;background:#fff;border:2px solid #e5e7eb;border-radius:10px;cursor:pointer;font-weight:600;text-align:center;transition:all 0.3s;font-size:0.9em;line-height:1.4;}
+.option-btn:hover{border-color:var(--primary);background:#f0fdfa;transform:translateY(-2px);}
+.option-btn.selected{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;border-color:var(--primary);}
+/* Breakdown */
+.breakdown{background:#f0fdfa;border:2px solid #a7f3d0;border-radius:12px;padding:18px;margin:18px 0;}
+.breakdown h4{color:var(--primary);margin-bottom:12px;font-size:1em;font-weight:700;}
+.bd-row{display:flex;justify-content:space-between;padding:8px 12px;border-radius:6px;margin-bottom:4px;font-size:0.94em;}
+.bd-base{background:#dbeafe;color:#1e40af;font-weight:700;}
+.bd-delta{background:#d1fae5;color:#065f46;font-weight:600;}
+.bd-magg{background:#fef3c7;color:#92400e;}
+.bd-magg-pct{background:#fde8d8;color:#92400e;font-style:italic;}
+.bd-tot{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;font-weight:800;font-size:1.04em;margin-top:8px;}
+/* Maggiorazioni */
+.magg-group-title{font-weight:700;color:#374151;margin:16px 0 8px;font-size:0.97em;padding:6px 10px;background:#f3f4f6;border-radius:6px;}
+.maggiorazione-item{display:flex;align-items:center;gap:14px;padding:13px;background:#f9fafb;border-radius:10px;border:2px solid #e5e7eb;margin-bottom:7px;transition:all 0.3s;}
+.maggiorazione-item:hover{border-color:var(--accent);background:#f0fdf4}
+.maggiorazione-item input[type="checkbox"]{width:20px;height:20px;cursor:pointer;accent-color:var(--accent);}
+.maggiorazione-label{flex:1;cursor:pointer;font-weight:500;font-size:0.95em;}
+.maggiorazione-price{font-weight:700;color:var(--accent);min-width:95px;text-align:right;font-size:0.95em;}
+.badge-pct{display:inline-block;background:#fde8d8;color:#c2410c;border-radius:4px;padding:1px 6px;font-size:0.75em;margin-left:6px;font-weight:700;}
+/* Slider */
+.ricarico-control{background:#f9fafb;padding:22px;border-radius:12px;border:2px solid #e5e7eb;margin:18px 0;}
+.slider-value{text-align:center;font-size:2.8em;font-weight:700;color:var(--primary);margin-bottom:13px;}
+.slider{width:100%;height:12px;border-radius:6px;background:#e5e7eb;outline:none;-webkit-appearance:none;cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--secondary));cursor:pointer;box-shadow:0 4px 8px rgba(0,0,0,0.2);}
+.slider::-moz-range-thumb{width:28px;height:28px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--primary),var(--secondary));cursor:pointer;}
+.slider-hints{display:flex;justify-content:space-between;margin-top:10px;font-size:0.9em;color:#6b7280;}
+.hint{display:flex;align-items:center;gap:6px}
+.hint-dot{width:11px;height:11px;border-radius:50%;}
+.hint-dot.red{background:var(--danger)} .hint-dot.yellow{background:var(--warning)} .hint-dot.green{background:var(--accent)}
+/* Preview */
+.price-preview{background:linear-gradient(135deg,var(--accent),#059669);color:#fff;padding:26px;border-radius:16px;margin-top:18px;}
+.price-preview h3{color:#fff;font-size:1.3em;margin-bottom:18px;}
+.pr-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.2);}
+.pr-row:last-child{border:none}
+.pr-row.total{font-size:1.35em;font-weight:700;background:rgba(255,255,255,0.15);padding:16px;border-radius:10px;margin-top:10px;}
+/* Result */
+.result-box{background:#fff;border-radius:16px;padding:28px;margin-bottom:18px;border:3px solid var(--primary);}
+.result-header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:22px;border-radius:12px;margin-bottom:22px;}
+.result-title{font-size:1.45em;font-weight:700}
+.result-subtitle{opacity:0.85;margin-top:7px}
+.result-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:11px;margin:16px 0;}
+.spec-item{background:#f9fafb;padding:12px;border-radius:10px;display:flex;justify-content:space-between;}
+.calc-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;}
+.calc-row:last-child{border:none}
+.price-boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin:20px 0;}
+.price-box{background:linear-gradient(135deg,#f9fafb,#fff);border:3px solid var(--primary);border-radius:16px;padding:20px;text-align:center;}
+.price-label{color:#6b7280;font-size:0.95em;margin-bottom:7px;font-weight:600;}
+.price-value{color:var(--primary);font-size:2em;font-weight:700;}
+.action-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:22px;}
+/* Upload zone */
+.upload-zone{border:3px dashed var(--primary);border-radius:14px;padding:36px;text-align:center;background:#f0fdfa;cursor:pointer;transition:all 0.3s;margin:18px 0;}
+.upload-zone:hover{background:#ccfbf1;border-color:var(--accent);}
+.upload-zone.drag{background:#ccfbf1;border-color:var(--accent);transform:scale(1.01);}
+.upload-zone input[type=file]{display:none;}
+.upload-icon{font-size:3em;margin-bottom:10px;}
+.upload-text{color:var(--primary);font-weight:600;font-size:1.05em;margin-bottom:6px;}
+.upload-sub{color:#6b7280;font-size:0.9em;}
+.listino-info{background:#f0fdfa;border:2px solid #a7f3d0;border-radius:10px;padding:16px;margin:14px 0;}
+.listino-info-row{display:flex;justify-content:space-between;padding:5px 0;font-size:0.93em;}
+.listino-info-label{color:#6b7280;font-weight:500;}
+.listino-info-value{font-weight:700;color:var(--primary);}
+/* Modal */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;backdrop-filter:blur(5px);}
+.modal.active{display:flex;align-items:center;justify-content:center}
+.modal-content{background:#fff;border-radius:20px;max-width:1050px;width:90%;max-height:90vh;overflow-y:auto;}
+.modal-header{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;padding:28px;border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;}
+.modal-header h2{margin:0;font-size:1.8em}
+.modal-close{background:#fff;color:var(--primary);border:none;width:42px;height:42px;border-radius:50%;cursor:pointer;font-size:1.7em;font-weight:700;}
+.modal-body{padding:28px}
+.cart-item{background:#f9fafb;border-radius:12px;padding:22px;margin-bottom:18px;border:2px solid #e5e7eb;}
+.cart-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e5e7eb;}
+.cart-item-title{font-weight:700;font-size:1.15em;color:var(--primary)}
+.cart-item-delete{background:var(--danger);color:#fff;border:none;padding:9px 16px;border-radius:8px;cursor:pointer;font-weight:600;}
+.cart-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px;}
+.cart-detail-item{display:flex;justify-content:space-between;padding:7px 0;}
+.cart-detail-label{color:#6b7280;font-weight:500;font-size:0.93em;}
+.cart-detail-value{font-weight:700;color:#1f2937;font-size:0.93em;}
+.cart-total{background:linear-gradient(135deg,var(--accent),#059669);color:#fff;padding:26px;border-radius:16px;margin:20px 0;}
+.cart-total-row{display:flex;justify-content:space-between;padding:10px 0;font-size:1.2em;}
+.cart-total-row:last-child{font-size:1.6em;font-weight:700;border-top:2px solid rgba(255,255,255,0.3);padding-top:16px;margin-top:10px;}
+.empty-cart{text-align:center;padding:70px 20px;color:#9ca3af;font-size:1.4em;}
+#risultato{display:none}
+#ricaricoSection{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <div class="header-left">
+    <h1>🎬 Preventivatore Film Estensibile</h1>
+    <div class="version">v1.2 – Listino MASTER Agriplast · Aggiornabile via Excel</div>
+  </div>
+  <button class="cart-button" onclick="openCart()">
+    🛒 Carrello <span class="cart-count" id="cartCount">0</span>
+  </button>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('preventivo',event)">📋 Preventivo</button>
+  <button class="tab" onclick="switchTab('upload',event)">📤 Aggiorna Listino</button>
+  <button class="tab" onclick="switchTab('config',event)">⚙️ Configurazioni</button>
+</div>
+
+<!-- PREVENTIVO -->
+<div id="tab-preventivo" class="tab-content active">
+  <div id="listinoAlert"></div>
+  <div id="configuratore"></div>
+
+  <div id="quantitaCard" style="display:none;">
+    <div class="card">
+      <h2>4️⃣ Quantità e Peso</h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Numero bobine:</label>
+          <input type="number" id="quantita" value="1" min="1" onchange="updatePreview()">
+        </div>
+        <div class="form-group">
+          <label>Peso per bobina (kg):</label>
+          <input type="number" id="pesoBobina" value="16" step="0.1" min="0.1" onchange="updatePreview()">
+          <small style="color:#6b7280;margin-top:5px;display:block;">Standard: 16 kg &nbsp;|&nbsp; Tubo macchinabile: 1,2 kg &nbsp;|&nbsp; Tubo manuale: 0,33 kg</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="maggiorazioniCard" style="display:none;">
+    <div class="card">
+      <h2>5️⃣ Maggiorazioni</h2>
+      <p style="color:#6b7280;margin-bottom:14px;font-size:0.95em;">Le voci <span class="badge-pct">%</span> si applicano come percentuale sul prezzo acquisto €/kg. Le altre sono addendi fissi €/kg.</p>
+      <div id="maggiorazioniList"></div>
+    </div>
+  </div>
+
+  <div id="ricaricoSection">
+    <div class="card">
+      <h2>6️⃣ Ricarico e Anteprima Prezzo</h2>
+      <div id="breakdownBox" class="breakdown" style="display:none;">
+        <h4>🔢 Composizione prezzo acquisto €/kg</h4>
+        <div id="breakdownRows"></div>
+      </div>
+      <div class="ricarico-control">
+        <div class="slider-value" id="ricaricoValue">35%</div>
+        <input type="range" class="slider" id="ricarico" min="0" max="100" value="35" oninput="updatePreview()">
+        <div class="slider-hints">
+          <div class="hint"><span class="hint-dot red"></span><span>Min 20%</span></div>
+          <div class="hint"><span class="hint-dot yellow"></span><span>Ideale 35%</span></div>
+          <div class="hint"><span class="hint-dot green"></span><span>Ottimo 50%+</span></div>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:18px;">
+        <label>Prezzo Riferimento Concorrenza (€/bobina – opzionale):</label>
+        <input type="number" step="0.01" id="prezzoRif" placeholder="Es: 35.00" onchange="updatePreview()">
+      </div>
+      <div id="pricePreview"></div>
+      <button class="btn btn-primary" onclick="finalizza()">✅ Finalizza e Mostra Dettagli</button>
+    </div>
+  </div>
+
+  <div id="risultato">
+    <div class="card">
+      <h2>📋 Preventivo Completo</h2>
+      <div id="risultatoContent"></div>
+      <div class="action-buttons">
+        <button class="btn btn-success" onclick="aggiungiCarrello()">🛒 Aggiungi al Carrello</button>
+        <button class="btn btn-primary" onclick="reset()">➕ Nuovo Preventivo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD LISTINO -->
+<div id="tab-upload" class="tab-content">
+  <div class="card">
+    <h2>📤 Aggiorna Listino MASTER</h2>
+    <div class="alert alert-info">
+      <strong>ℹ️ Come funziona:</strong><br>
+      Allega il file Excel <code>listini_estensibile.xlsx</code> aggiornato. Il sistema leggerà automaticamente il foglio <strong>MASTER</strong> e aggiornerà prezzi, delta e maggiorazioni senza toccare il carrello salvato.
+    </div>
+
+    <div class="alert alert-warning">
+      <strong>📋 Struttura attesa del foglio MASTER:</strong><br>
+      • Riga 2: prezzo base €/kg (col H) – MACCHINABILE VERGINE STANDARD range 19-35µm<br>
+      • Sezione <em>TIPOLOGIE</em>: righe con ARTICOLO, ALTEZZA, MATERIALE, PRESTIRO, %PRESTIRO, SPESSORE, FORNITORE, €/KG<br>
+      • Sezione <em>MAGGIORAZIONI</em>: righe con NOME, VALORE, €/KG, FORNITORE<br>
+      • <strong>PESO NETTISSIMO</strong>: il valore nella colonna €/KG è interpretato come <strong>percentuale</strong> (es. 0.12 = +12%)
+    </div>
+
+    <label class="upload-zone" for="fileUpload" id="uploadZone">
+      <div class="upload-icon">📂</div>
+      <div class="upload-text">Clicca o trascina qui il file Excel</div>
+      <div class="upload-sub">Accetta: .xlsx</div>
+      <input type="file" id="fileUpload" accept=".xlsx" onchange="handleUpload(event)">
+    </label>
+
+    <div id="uploadStatus"></div>
+
+    <div id="currentListinoInfo" style="display:none;">
+      <h3>📊 Listino attualmente caricato</h3>
+      <div class="listino-info" id="listinoInfoBox"></div>
+      <button class="btn btn-danger" style="width:auto;padding:10px 22px;margin-top:10px;" onclick="resetListino()">🔄 Ripristina listino originale</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="tab-config" class="tab-content">
+  <div class="card">
+    <h2>⚙️ Configurazioni Sistema</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Ricarico Minimo (%):</label>
+        <input type="number" id="configMin" value="20">
+      </div>
+      <div class="form-group">
+        <label>Ricarico Ideale (%):</label>
+        <input type="number" id="configIdeale" value="35">
+      </div>
+      <div class="form-group">
+        <label>Peso bobina standard (kg):</label>
+        <input type="number" id="configPeso" value="16" step="0.1">
+      </div>
+    </div>
+    <button class="btn btn-success" onclick="saveConfig()">💾 Salva Configurazioni</button>
+    <div id="configAlert"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL CARRELLO -->
+<div id="cartModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🛒 Carrello Preventivi</h2>
+      <button class="modal-close" onclick="closeCart()">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="cartItems"></div>
+      <div id="cartFooter"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SheetJS per leggere xlsx lato browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<script>
+// ================================================================
+// LISTINO DEFAULT (da MASTER – marzo 2026)
+// Formula: prezzo_acq_kg = BASE + delta + somma(magg_fissi) + prezzo_acq_kg * pct_netto
+// ================================================================
+var DEFAULT_LISTINO = {
+  fonte: "Listino predefinito (MASTER marzo 2026)",
+  data_carico: "2026-03-01",
+  base_kg: 1.90,
+  deltas: [
+    // VERGINE STANDARD 150%
+    {materiale:"VERGINE",     prestiro:"STANDARD",    pct:150, spessore:null, delta:0.00},
+    {materiale:"VERGINE",     prestiro:"STANDARD",    pct:150, spessore:17,   delta:0.03},
+    {materiale:"VERGINE",     prestiro:"STANDARD",    pct:150, spessore:15,   delta:0.06},
+    {materiale:"VERGINE",     prestiro:"STANDARD",    pct:150, spessore:12,   delta:0.35},
+    // ECOAGRI 50 STANDARD 150%
+    {materiale:"ECOAGRI 50",  prestiro:"STANDARD",    pct:150, spessore:null, delta:0.10},
+    {materiale:"ECOAGRI 50",  prestiro:"STANDARD",    pct:150, spessore:17,   delta:0.13},
+    // VERGINE POWER 250%
+    {materiale:"VERGINE",     prestiro:"POWER",       pct:250, spessore:null, delta:0.16},
+    {materiale:"VERGINE",     prestiro:"POWER",       pct:250, spessore:17,   delta:0.19},
+    {materiale:"VERGINE",     prestiro:"POWER",       pct:250, spessore:15,   delta:0.22},
+    {materiale:"VERGINE",     prestiro:"POWER",       pct:250, spessore:12,   delta:0.45},
+    // VERGINE UPW 280%
+    {materiale:"VERGINE",     prestiro:"UPW",         pct:280, spessore:null, delta:0.22},
+    {materiale:"VERGINE",     prestiro:"UPW",         pct:280, spessore:17,   delta:0.25},
+    {materiale:"VERGINE",     prestiro:"UPW",         pct:280, spessore:15,   delta:0.28},
+    {materiale:"VERGINE",     prestiro:"UPW",         pct:280, spessore:12,   delta:0.55},
+    // VERGINE UPW-PLUS 300%
+    {materiale:"VERGINE",     prestiro:"UPW - PLUS",  pct:300, spessore:null, delta:0.28},
+    {materiale:"VERGINE",     prestiro:"UPW - PLUS",  pct:300, spessore:17,   delta:0.31},
+    {materiale:"VERGINE",     prestiro:"UPW - PLUS",  pct:300, spessore:15,   delta:0.34},
+    // VERGINE STAR-PLUS 350%
+    {materiale:"VERGINE",     prestiro:"STAR - PLUS", pct:350, spessore:17,   delta:0.35},
+    {materiale:"VERGINE",     prestiro:"STAR - PLUS", pct:350, spessore:15,   delta:0.38},
+    {materiale:"VERGINE",     prestiro:"STAR - PLUS", pct:350, spessore:12,   delta:0.65},
+    {materiale:"VERGINE",     prestiro:"STAR - PLUS", pct:350, spessore:10,   delta:0.75},
+    // VERGINE LM18 220%
+    {materiale:"VERGINE",     prestiro:"LM18",        pct:220, spessore:15,   delta:0.40},
+    {materiale:"VERGINE",     prestiro:"LM18",        pct:220, spessore:12,   delta:0.55},
+    {materiale:"VERGINE",     prestiro:"LM18",        pct:220, spessore:10,   delta:0.60},
+    {materiale:"VERGINE",     prestiro:"LM18",        pct:220, spessore:8,    delta:0.80},
+    {materiale:"VERGINE",     prestiro:"LM18",        pct:220, spessore:6,    delta:0.90},
+  ],
+  maggiorazioni: [
+    {nome:"Altezza 25 cm",             gruppo:"altezza", tipo:"fisso",   prezzo_kg:0.05},
+    {nome:"Altezza 45 cm",             gruppo:"altezza", tipo:"fisso",   prezzo_kg:0.05},
+    {nome:"Altezza 75 cm",             gruppo:"altezza", tipo:"fisso",   prezzo_kg:0.05},
+    {nome:"Altezza 100 cm",            gruppo:"altezza", tipo:"fisso",   prezzo_kg:0.05},
+    {nome:"Colore Bianco",             gruppo:"colore",  tipo:"fisso",   prezzo_kg:0.12},
+    {nome:"Colore Nero",               gruppo:"colore",  tipo:"fisso",   prezzo_kg:0.12},
+    {nome:"Anti UV 6 mesi",            gruppo:"uv",      tipo:"fisso",   prezzo_kg:0.08},
+    {nome:"Anti UV 12 mesi",           gruppo:"uv",      tipo:"fisso",   prezzo_kg:0.16},
+    {nome:"Tubo macchinabile 1,2 kg",  gruppo:"tubo",    tipo:"fisso",   prezzo_kg:0.05},
+    {nome:"Tubo manuale 330 gr",       gruppo:"tubo",    tipo:"fisso",   prezzo_kg:0.10},
+    {nome:"Bobina macchinabile >17 kg",gruppo:"tubo",    tipo:"fisso",   prezzo_kg:0.02},
+    // PESO NETTISSIMO: valore percentuale (0.12 = +12% sul prezzo €/kg)
+    {nome:"Peso nettissimo",           gruppo:"netto",   tipo:"pct",     pct:0.12},
+  ]
+};
+
+var GRUPPI_LABEL = {altezza:"📐 Altezza alternativa", colore:"🎨 Colore", uv:"☀️ Anti UV", tubo:"🧱 Tipo tubo / bobina", netto:"⚖️ Altre"};
+var GRUPPI_ESCLUSIVI = ['altezza','colore','uv','tubo'];
+
+// ================================================================
+// STATO
+// ================================================================
+var L          = null; // listino attivo (DEFAULT o caricato)
+var selDelta   = null;
+var selMat     = null;
+var selPre     = null;
+var magg       = [];
+var cart       = [];
+var prev       = null;
+var config     = {min:20, ideale:35, peso:16};
+
+// ================================================================
+// INIT
+// ================================================================
+window.onload = function(){
+  var savedCart = localStorage.getItem('cart_estensibile');
+  if(savedCart){cart=JSON.parse(savedCart);document.getElementById('cartCount').textContent=cart.length;}
+  loadConfig();
+
+  // Carica listino salvato o usa default
+  var savedListino = localStorage.getItem('listino_estensibile');
+  if(savedListino){
+    try{
+      L = JSON.parse(savedListino);
+      showListinoAlert('📊 Listino personalizzato attivo: <strong>'+L.fonte+'</strong> (caricato il '+L.data_carico+')', 'info');
+    }catch(e){ L = DEFAULT_LISTINO; }
+  } else {
+    L = DEFAULT_LISTINO;
+  }
+
+  buildConfiguratore();
+  refreshUploadInfo();
+
+  // Drag & drop
+  var zone = document.getElementById('uploadZone');
+  zone.addEventListener('dragover', function(e){e.preventDefault();zone.classList.add('drag');});
+  zone.addEventListener('dragleave', function(){zone.classList.remove('drag');});
+  zone.addEventListener('drop', function(e){
+    e.preventDefault();zone.classList.remove('drag');
+    var file = e.dataTransfer.files[0];
+    if(file) processFile(file);
+  });
+};
+
+function switchTab(t,e){
+  document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+  e.target.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(function(x){x.classList.remove('active');});
+  document.getElementById('tab-'+t).classList.add('active');
+}
+function loadConfig(){
+  var s=localStorage.getItem('config_estensibile');
+  if(s){config=JSON.parse(s);document.getElementById('configMin').value=config.min;document.getElementById('configIdeale').value=config.ideale;document.getElementById('configPeso').value=config.peso||16;}
+}
+function saveConfig(){
+  config.min=parseFloat(document.getElementById('configMin').value);
+  config.ideale=parseFloat(document.getElementById('configIdeale').value);
+  config.peso=parseFloat(document.getElementById('configPeso').value)||16;
+  localStorage.setItem('config_estensibile',JSON.stringify(config));
+  document.getElementById('configAlert').innerHTML='<div class="alert alert-success">✅ Configurazioni salvate!</div>';
+  setTimeout(function(){document.getElementById('configAlert').innerHTML='';},3000);
+}
+function showListinoAlert(msg, tipo){
+  var el=document.getElementById('listinoAlert');
+  if(el) el.innerHTML='<div class="alert alert-'+tipo+'">'+msg+'</div>';
+}
+
+// ================================================================
+// UPLOAD & PARSING EXCEL
+// ================================================================
+function handleUpload(e){
+  var file = e.target.files[0];
+  if(file) processFile(file);
+}
+
+function processFile(file){
+  if(!file.name.match(/\.xlsx$/i)){
+    setUploadStatus('<div class="alert alert-danger">❌ File non valido. Carica un file .xlsx</div>');
+    return;
+  }
+  setUploadStatus('<div class="alert alert-info">⏳ Lettura del file in corso...</div>');
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, {type:'array', cellFormula:false, cellNF:false, raw:true});
+      
+      if(wb.SheetNames.indexOf('MASTER') === -1){
+        setUploadStatus('<div class="alert alert-danger">❌ Foglio "MASTER" non trovato nel file. Controlla la struttura.</div>');
+        return;
+      }
+
+      var ws = wb.Sheets['MASTER'];
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+
+      var nuovoListino = parseMASTER(rows, file.name);
+      if(!nuovoListino){
+        setUploadStatus('<div class="alert alert-danger">❌ Impossibile leggere il listino. Controlla che il foglio MASTER abbia la struttura corretta.</div>');
+        return;
+      }
+
+      L = nuovoListino;
+      localStorage.setItem('listino_estensibile', JSON.stringify(L));
+
+      // Reset configuratore con nuovo listino
+      resetConfiguratore();
+      buildConfiguratore();
+      refreshUploadInfo();
+      showListinoAlert('✅ Listino aggiornato: <strong>'+L.fonte+'</strong>', 'success');
+
+      setUploadStatus(
+        '<div class="alert alert-success">✅ Listino aggiornato con successo!<br>' +
+        '• Prezzo base: <strong>€'+L.base_kg.toFixed(3)+'/kg</strong><br>' +
+        '• Combinazioni disponibili: <strong>'+L.deltas.length+'</strong><br>' +
+        '• Maggiorazioni: <strong>'+L.maggiorazioni.length+'</strong> (di cui ' +
+        L.maggiorazioni.filter(function(m){return m.tipo==='pct';}).length+' in %)</div>'
+      );
+    } catch(err){
+      setUploadStatus('<div class="alert alert-danger">❌ Errore durante la lettura: '+err.message+'</div>');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseMASTER(rows, filename){
+  var listino = {
+    fonte: filename,
+    data_carico: new Date().toLocaleDateString('it-IT'),
+    base_kg: null,
+    deltas: [],
+    maggiorazioni: []
+  };
+
+  // ── Riga 2 (indice 1 dopo header=0): prezzo base in colonna H (indice 7)
+  // Trova la riga dove col A = 'MACCHINABILE' e col F = range (non numerico)
+  for(var i=0; i<Math.min(15,rows.length); i++){
+    var r=rows[i];
+    if(r && r[0] && String(r[0]).toUpperCase()==='MACCHINABILE' && r[7]!==null && typeof r[7]==='number' && r[5]!==null && typeof r[5]==='string'){
+      listino.base_kg = parseFloat(r[7]);
+      break;
+    }
+  }
+  if(!listino.base_kg){
+    // fallback: cerca riga con 'STANDARD' e range spessori testuale
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      if(r && r[3] && String(r[3]).toUpperCase()==='STANDARD' && r[5] && typeof r[5]==='string' && r[7]){
+        listino.base_kg=parseFloat(r[7]); break;
+      }
+    }
+  }
+  if(!listino.base_kg) return null;
+
+  // ── Sezione TIPOLOGIE: righe dopo intestazione con colonna F numerica (spessore)
+  var inTipologie = false;
+  var inMaggiorazioni = false;
+
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i]; if(!r) continue;
+    var a=r[0]?String(r[0]).toUpperCase().trim():'';
+
+    if(a==='TIPOLOGIE'){ inTipologie=true; inMaggiorazioni=false; continue; }
+    if(a==='MAGGIORAZIONI'){ inMaggiorazioni=true; inTipologie=false; continue; }
+    if(a==='ARTICOLO') continue; // intestazione
+
+    if(inTipologie && a==='MACCHINABILE'){
+      var mat = r[2]?String(r[2]).trim():null;
+      var pre = r[3]?String(r[3]).trim():null;
+      var pct = r[4]?parseFloat(r[4]):null;
+      var sp  = r[5];
+      var eur = r[7];
+      if(!mat||!pre||!pct) continue;
+      // sp numerico = spessore specifico; stringa = range generico → spessore null
+      var spNum = (sp!==null && typeof sp==='number') ? sp : null;
+      var spStr = (sp!==null && typeof sp==='string') ? sp : null;
+      if(eur!==null && typeof eur==='number'){
+        listino.deltas.push({materiale:mat, prestiro:pre, pct:pct, spessore:spNum, delta:parseFloat(eur)});
+      }
+    }
+
+    if(inMaggiorazioni){
+      var nome=r[0]?String(r[0]).trim():null;
+      var val =r[1];
+      var eur =r[2];
+      if(!nome||nome===''||nome.toUpperCase()==='NOME MAGGIORAZIONE') continue;
+      if(eur===null||eur===undefined) continue;
+      eur=parseFloat(eur);
+
+      var gruppo='altre';
+      var nomeUp=nome.toUpperCase();
+      if(nomeUp==='ALTEZZA') gruppo='altezza';
+      else if(nomeUp==='BIANCO'||nomeUp==='NERO') gruppo='colore';
+      else if(nomeUp.indexOf('ANTI UV')!==-1||nomeUp.indexOf('UV')!==-1) gruppo='uv';
+      else if(nomeUp.indexOf('TUBO')!==-1||nomeUp.indexOf('BOBINA')!==-1) gruppo='tubo';
+      else if(nomeUp.indexOf('NETTO')!==-1) gruppo='netto';
+
+      // Nome leggibile
+      var nomeLegg = nome.charAt(0).toUpperCase()+nome.slice(1).toLowerCase();
+      if(val) nomeLegg+=' '+(typeof val==='number'?val:val);
+      if(gruppo==='altezza') nomeLegg='Altezza '+(val||'')+ ' cm';
+      else if(nome.toUpperCase()==='BIANCO') nomeLegg='Colore Bianco';
+      else if(nome.toUpperCase()==='NERO') nomeLegg='Colore Nero';
+      else if(nomeUp.indexOf('ANTI UV')!==-1) nomeLegg='Anti UV '+(val||'');
+      else if(nomeUp==='TUBO MACCHINABILE') nomeLegg='Tubo macchinabile '+(val||'');
+      else if(nomeUp==='TUBO MANUALE') nomeLegg='Tubo manuale '+(val||'');
+      else if(nomeUp==='BOBINA MACCHINABILE') nomeLegg='Bobina macchinabile '+(val||'');
+      else if(nomeUp==='PESO NETTISSIMO') nomeLegg='Peso nettissimo';
+
+      // PESO NETTISSIMO → tipo percentuale
+      var tipo = (nomeUp==='PESO NETTISSIMO') ? 'pct' : 'fisso';
+
+      listino.maggiorazioni.push({nome:nomeLegg, gruppo:gruppo, tipo:tipo, prezzo_kg:(tipo==='pct'?null:eur), pct:(tipo==='pct'?eur:null)});
+    }
+  }
+
+  if(listino.deltas.length===0) return null;
+
+  // Rimuovi duplicati deltas (stessa combinazione: prendi primo)
+  var seen={};
+  listino.deltas = listino.deltas.filter(function(d){
+    var k=d.materiale+'|'+d.prestiro+'|'+d.pct+'|'+d.spessore;
+    if(seen[k]) return false; seen[k]=true; return true;
+  });
+
+  return listino;
+}
+
+function setUploadStatus(html){document.getElementById('uploadStatus').innerHTML=html;}
+
+function refreshUploadInfo(){
+  var box=document.getElementById('currentListinoInfo');
+  var infoEl=document.getElementById('listinoInfoBox');
+  if(!L){box.style.display='none';return;}
+  box.style.display='block';
+  infoEl.innerHTML=
+    lir('Fonte',L.fonte)+
+    lir('Data carico',L.data_carico)+
+    lir('Prezzo base','€'+L.base_kg.toFixed(3)+'/kg')+
+    lir('Combinazioni prezzi',L.deltas.length+' varianti')+
+    lir('Maggiorazioni',L.maggiorazioni.length+' voci ('+L.maggiorazioni.filter(function(m){return m.tipo==='pct';}).length+' in %)');
+}
+function lir(l,v){return '<div class="listino-info-row"><span class="listino-info-label">'+l+'</span><span class="listino-info-value">'+v+'</span></div>';}
+
+function resetListino(){
+  if(!confirm('Ripristinare il listino originale? Il listino personalizzato verrà rimosso.')) return;
+  localStorage.removeItem('listino_estensibile');
+  L=DEFAULT_LISTINO;
+  resetConfiguratore();
+  buildConfiguratore();
+  refreshUploadInfo();
+  showListinoAlert('🔄 Listino originale ripristinato.','info');
+  setUploadStatus('');
+}
+
+// ================================================================
+// CONFIGURATORE
+// ================================================================
+function buildConfiguratore(){
+  if(!L){return;}
+  var materiali=uniq(L.deltas.map(function(x){return x.materiale;})).sort();
+  var h='<div class="card"><h2>1️⃣ Configuratore Film Estensibile – MACCHINABILE</h2>';
+  h+='<div class="alert alert-info">💡 <strong>Formula prezzo acquisto:</strong> Base (€'+L.base_kg.toFixed(3)+'/kg) + Delta prestiro/spessore + Maggiorazioni fissi + Maggiorazioni %</div>';
+  h+='<div class="config-step" id="s1"><div class="config-step-title">1. Materiale</div><div class="option-buttons">';
+  materiali.forEach(function(m){h+=obtn(m,"selMateriale('"+esc(m)+"',event)");});
+  h+='</div></div>';
+  h+='<div class="config-step disabled" id="s2"><div class="config-step-title">2. Prestiro</div><div id="s2b" class="option-buttons"></div></div>';
+  h+='<div class="config-step disabled" id="s3"><div class="config-step-title">3. Spessore (µm)</div><div id="s3b" class="option-buttons"></div></div>';
+  h+='</div>';
+  document.getElementById('configuratore').innerHTML=h;
+}
+
+function obtn(label,onclick){return '<button class="option-btn" onclick="'+onclick+'">'+label+'</button>';}
+function uniq(arr){return arr.filter(function(v,i,a){return a.indexOf(v)===i;});}
+function esc(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+
+function selMateriale(v,e){
+  selMat=v;selPre=null;selDelta=null;
+  hl('#s1',e.target);
+  var pk=uniq(L.deltas.filter(function(x){return x.materiale===v;}).map(function(x){return x.prestiro+'|||'+x.pct;})).sort();
+  document.getElementById('s2b').innerHTML=pk.map(function(p){
+    var pts=p.split('|||');
+    return obtn(pts[0]+'<br><small>'+pts[1]+'%</small>',"selPrestiro('"+esc(pts[0])+"',"+pts[1]+",event)");
+  }).join('');
+  en('s2');dis('s3');hideBottom();
+}
+
+function selPrestiro(prestiro,pct,e){
+  selPre=prestiro;selDelta=null;
+  hl('#s2',e.target);
+  var rows=L.deltas.filter(function(x){return x.materiale===selMat&&x.prestiro===prestiro&&x.delta!==null;});
+  var h='';
+  var gen=rows.find(function(x){return x.spessore===null;});
+  if(gen) h+=obtn('Generico<br><small>19-35 µm | Δ€'+gen.delta.toFixed(2)+'/kg</small>',"selSpessore(null,event)");
+  rows.filter(function(x){return x.spessore!==null;}).sort(function(a,b){return b.spessore-a.spessore;}).forEach(function(r){
+    h+=obtn(r.spessore+' µm<br><small>Δ +€'+r.delta.toFixed(2)+'/kg</small>',"selSpessore("+r.spessore+",event)");
+  });
+  document.getElementById('s3b').innerHTML=h;
+  en('s3');hideBottom();
+}
+
+function selSpessore(sp,e){
+  hl('#s3',e.target);
+  selDelta=L.deltas.find(function(x){return x.materiale===selMat&&x.prestiro===selPre&&x.spessore===sp&&x.delta!==null;});
+  if(selDelta){
+    document.getElementById('pesoBobina').value=config.peso||16;
+    document.getElementById('quantitaCard').style.display='block';
+    loadMagg();
+    document.getElementById('ricaricoSection').style.display='block';
+    updatePreview();
+  }
+}
+
+function hl(stepSel,target){document.querySelectorAll(stepSel+' .option-btn').forEach(function(b){b.classList.remove('selected');});target.classList.add('selected');}
+function en(id){document.getElementById(id).classList.remove('disabled');}
+function dis(id){document.getElementById(id).classList.add('disabled');}
+function hideBottom(){
+  ['quantitaCard','maggiorazioniCard','risultato'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('ricaricoSection').style.display='none';
+  document.getElementById('pricePreview').innerHTML='';
+  document.getElementById('breakdownBox').style.display='none';
+}
+function resetConfiguratore(){selDelta=null;selMat=null;selPre=null;magg=[];hideBottom();}
+
+// ================================================================
+// MAGGIORAZIONI
+// ================================================================
+function loadMagg(){
+  magg=[];
+  var gruppiOrdinati=['altezza','colore','uv','tubo','netto','altre'];
+  var h='';
+  gruppiOrdinati.forEach(function(g){
+    var items=L.maggiorazioni.filter(function(x){return x.gruppo===g;});
+    if(!items.length) return;
+    h+='<div class="magg-group-title">'+(GRUPPI_LABEL[g]||g.charAt(0).toUpperCase()+g.slice(1))+'</div>';
+    items.forEach(function(m){
+      var j=L.maggiorazioni.indexOf(m);
+      var priceLabel = m.tipo==='pct'
+        ? '+<span class="badge-pct">'+Math.round(m.pct*100)+'%</span> sul prezzo €/kg'
+        : '+€'+m.prezzo_kg.toFixed(2)+'/kg';
+      h+='<div class="maggiorazione-item">';
+      h+='<input type="checkbox" id="mg'+j+'" onchange="togMagg('+j+',this.checked)">';
+      h+='<label class="maggiorazione-label" for="mg'+j+'">'+m.nome+(m.tipo==='pct'?' <span class="badge-pct">%</span>':'')+'</label>';
+      h+='<span class="maggiorazione-price">'+priceLabel+'</span>';
+      h+='</div>';
+    });
+  });
+  document.getElementById('maggiorazioniList').innerHTML=h;
+  document.getElementById('maggiorazioniCard').style.display='block';
+}
+
+function togMagg(i,checked){
+  var m=L.maggiorazioni[i];
+  if(checked){
+    if(GRUPPI_ESCLUSIVI.indexOf(m.gruppo)!==-1){
+      magg=magg.filter(function(x){return x.gruppo!==m.gruppo;});
+      L.maggiorazioni.forEach(function(mm,idx){
+        if(mm.gruppo===m.gruppo&&idx!==i){var cb=document.getElementById('mg'+idx);if(cb)cb.checked=false;}
+      });
+    }
+    magg.push(m);
+  } else {
+    magg=magg.filter(function(x){return x.nome!==m.nome;});
+  }
+  updatePreview();
+}
+
+// ================================================================
+// CALCOLO
+// ================================================================
+function calcola(){
+  if(!selDelta) return null;
+  var q    = parseInt(document.getElementById('quantita').value)||1;
+  var peso = parseFloat(document.getElementById('pesoBobina').value)||16;
+  var r    = parseFloat(document.getElementById('ricarico').value)||35;
+
+  var base  = L.base_kg;
+  var delta = selDelta.delta;
+
+  // Maggiorazioni fisse (€/kg additive)
+  var magg_fissi = magg.filter(function(m){return m.tipo==='fisso';});
+  var extra_fisso = magg_fissi.reduce(function(a,m){return a+m.prezzo_kg;},0);
+
+  // Maggiorazioni percentuali (si applicano sul subtotale base+delta+fissi)
+  var magg_pct = magg.filter(function(m){return m.tipo==='pct';});
+  var sub = base + delta + extra_fisso;
+  var extra_pct_val = magg_pct.reduce(function(a,m){return a + sub * m.pct;},0);
+
+  var pm    = sub + extra_pct_val;   // prezzo acquisto totale €/kg
+  var pau_b = pm * peso;             // €/bobina acquisto
+  var pat   = pau_b * q;
+  var ir    = pat * (r/100);
+  var pvt   = pat + ir;
+  var pvu   = pvt / q;
+  var pv_kg = pvt / (peso*q);
+
+  return {q,peso,r,base,delta,extra_fisso,magg_fissi,magg_pct,extra_pct_val,sub,pm,pau_b,pat,ir,pvt,pvu,pv_kg};
+}
+
+function updateBreakdown(c){
+  var box=document.getElementById('breakdownBox');
+  if(!c){box.style.display='none';return;}
+  box.style.display='block';
+  var spLbl=selDelta.spessore?selDelta.spessore+'µm':'range 19-35µm';
+  var h='';
+  h+=bdrow('bd-base','🔵 Prezzo base (VERGINE STANDARD – '+spLbl+')','€'+c.base.toFixed(3)+'/kg');
+  h+=bdrow('bd-delta','➕ Delta '+selPre+' '+selDelta.pct+'% – '+spLbl,'€'+c.delta.toFixed(3)+'/kg');
+  c.magg_fissi.forEach(function(m){h+=bdrow('bd-magg','➕ '+m.nome+' (fisso)','€'+m.prezzo_kg.toFixed(3)+'/kg');});
+  if(c.magg_pct.length>0){
+    h+=bdrow('bd-magg','   Subtotale fissi','€'+c.sub.toFixed(3)+'/kg');
+    c.magg_pct.forEach(function(m){
+      h+=bdrow('bd-magg-pct','✖️ '+m.nome+' ('+Math.round(m.pct*100)+'% × €'+c.sub.toFixed(3)+')','€'+( c.sub*m.pct).toFixed(3)+'/kg');
+    });
+  }
+  h+=bdrow('bd-tot','= Prezzo acquisto €/kg','€'+c.pm.toFixed(3)+'/kg');
+  document.getElementById('breakdownRows').innerHTML=h;
+}
+function bdrow(cls,l,v){return '<div class="bd-row '+cls+'"><span>'+l+'</span><strong>'+v+'</strong></div>';}
+
+function updatePreview(){
+  if(!selDelta) return;
+  var c=calcola();if(!c)return;
+  document.getElementById('ricaricoValue').textContent=c.r+'%';
+  updateBreakdown(c);
+  var pr=parseFloat(document.getElementById('prezzoRif').value)||0;
+  var gu=0,gt=0;
+  if(pr>0){gu=pr-c.pvu;gt=gu*c.q;}
+  var h='<div class="price-preview"><h3>💰 Anteprima Prezzo</h3>';
+  h+=prow('Prezzo acquisto €/kg','€'+c.pm.toFixed(3)+'/kg');
+  h+=prow('Peso per bobina',c.peso+' kg');
+  h+=prow('Prezzo acquisto per bobina','€'+c.pau_b.toFixed(2));
+  h+=prow('Prezzo acquisto totale ('+c.q+' bob.)','€'+c.pat.toFixed(2));
+  h+=prow('Ricarico '+c.r+'%','+€'+c.ir.toFixed(2));
+  h+='<div class="pr-row total"><span>PREZZO VENDITA TOTALE:</span><span>€'+c.pvt.toFixed(2)+'</span></div>';
+  h+=prow('Prezzo per bobina','<strong>€'+c.pvu.toFixed(2)+'</strong>');
+  h+=prow('Prezzo €/kg (vendita)','€'+c.pv_kg.toFixed(3)+'/kg');
+  if(pr>0){
+    h+='<div class="pr-row" style="border-top:2px solid rgba(255,255,255,0.3);margin-top:8px;padding-top:12px;">';
+    h+='<span>Guadagno vs rif.:</span><span>'+(gu>=0?'+':'')+'€'+gu.toFixed(2)+'/bobina</span></div>';
+    h+=prow('Guadagno totale',(gt>=0?'+':'')+'€'+gt.toFixed(2));
+  }
+  h+='</div>';
+  document.getElementById('pricePreview').innerHTML=h;
+}
+function prow(l,v){return '<div class="pr-row"><span>'+l+':</span><span>'+v+'</span></div>';}
+
+// ================================================================
+// FINALIZZA
+// ================================================================
+function finalizza(){
+  if(!selDelta){alert('Seleziona un prodotto.');return;}
+  var c=calcola();if(!c)return;
+  var pr=parseFloat(document.getElementById('prezzoRif').value)||0;
+  var gu=0,gt=0,gp=0;
+  if(pr>0){gu=pr-c.pvu;gt=gu*c.q;gp=(gu/pr)*100;}
+  var magNomi=magg.map(function(x){return x.nome+(x.tipo==='pct'?' ('+Math.round(x.pct*100)+'%)':'');});
+  var spLbl=selDelta.spessore?selDelta.spessore+' µm':'Generico 19-35 µm';
+  var altMagg=magg.find(function(x){return x.gruppo==='altezza';});
+
+  var h='<div class="result-box">';
+  h+='<div class="result-header"><div class="result-title">MACCHINABILE '+selMat+' – '+selPre+' '+selDelta.pct+'% – '+spLbl+'</div>';
+  h+='<div class="result-subtitle">AGRIPLAST · Altezza 50 cm'+(altMagg?' → '+altMagg.nome:'')+'</div></div>';
+  h+='<div class="result-specs">';
+  h+=spe('Spessore',spLbl)+spe('Prestiro',selPre+' ('+selDelta.pct+'%)')+spe('Materiale',selMat);
+  h+=spe('Peso/bobina',c.peso+' kg')+spe('N° bobine',c.q)+spe('Peso totale',(c.peso*c.q).toFixed(1)+' kg');
+  h+='</div>';
+  if(magNomi.length>0){h+='<div class="alert alert-warning">⚙️ Maggiorazioni: '+magNomi.join(' · ')+'</div>';}
+
+  h+='<h3>🔢 Composizione prezzo acquisto</h3><div>';
+  h+=crow('Prezzo base (VERGINE STANDARD – 19-35µm)','€'+c.base.toFixed(3)+'/kg');
+  h+=crow('Delta '+selPre+' '+selDelta.pct+'% – '+spLbl,'+€'+c.delta.toFixed(3)+'/kg');
+  c.magg_fissi.forEach(function(m){h+=crow(m.nome+' (€/kg fisso)','+€'+m.prezzo_kg.toFixed(3)+'/kg');});
+  if(c.magg_pct.length>0){
+    h+=crow('Subtotale fissi','€'+c.sub.toFixed(3)+'/kg');
+    c.magg_pct.forEach(function(m){h+=crow(m.nome+' ('+Math.round(m.pct*100)+'% su €'+c.sub.toFixed(3)+')','+€'+(c.sub*m.pct).toFixed(3)+'/kg');});
+  }
+  h+=crow('<strong>= Prezzo acquisto €/kg</strong>','<strong>€'+c.pm.toFixed(3)+'/kg</strong>');
+  h+='</div>';
+
+  h+='<h3>💰 Dettaglio prezzo finale</h3><div>';
+  h+=crow('Prezzo acquisto per bobina (€'+c.pm.toFixed(3)+' × '+c.peso+' kg)','€'+c.pau_b.toFixed(2));
+  h+=crow('Prezzo acquisto totale (×'+c.q+' bob.)','€'+c.pat.toFixed(2));
+  h+=crow('Ricarico '+c.r+'%','+€'+c.ir.toFixed(2));
+  h+='</div>';
+
+  h+='<div class="price-boxes">';
+  h+=pbox('Prezzo Totale','€'+c.pvt.toFixed(2));
+  h+=pbox('Prezzo / Bobina','€'+c.pvu.toFixed(2));
+  h+=pbox('Prezzo / kg vendita','€'+c.pv_kg.toFixed(3));
+  h+='</div>';
+
+  if(pr>0){
+    var col=gu>=0?'#10b981':'#ef4444';
+    h+='<div class="result-box" style="background:'+col+';color:#fff;">';
+    h+='<h3 style="color:#fff;border:none;">📊 Analisi vs Prezzo Riferimento</h3>';
+    h+=prowc('Prezzo riferimento','€'+pr.toFixed(2)+'/bobina');
+    h+=prowc('Tuo prezzo','€'+c.pvu.toFixed(2)+'/bobina');
+    h+=prowc('Guadagno/bobina',(gu>=0?'+':'')+'€'+gu.toFixed(2)+' ('+gp.toFixed(1)+'%)');
+    h+='<div class="pr-row total" style="background:rgba(255,255,255,0.2);border:none;"><span>Guadagno totale:</span><span>'+(gt>=0?'+':'')+'€'+gt.toFixed(2)+'</span></div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  document.getElementById('risultatoContent').innerHTML=h;
+  document.getElementById('risultato').style.display='block';
+  document.getElementById('risultato').scrollIntoView({behavior:'smooth'});
+
+  prev={
+    art:'MACCHINABILE '+selMat+' '+selPre+' '+spLbl,forn:'AGRIPLAST',
+    spessore:spLbl,prestiro:selPre+' '+selDelta.pct+'%',
+    peso:c.peso,q:c.q,base:c.base,delta:c.delta,
+    extra_fisso:c.extra_fisso,extra_pct_val:c.extra_pct_val,
+    pm:c.pm,pau_b:c.pau_b,pat:c.pat,r:c.r,ir:c.ir,
+    pvt:c.pvt,pvu:c.pvu,pv_kg:c.pv_kg,magg:magNomi,pr:pr,gt:gt
+  };
+}
+function spe(l,v){return '<div class="spec-item"><span>'+l+'</span><strong>'+v+'</strong></div>';}
+function crow(l,v){return '<div class="calc-row"><span>'+l+'</span><span>'+v+'</span></div>';}
+function pbox(l,v){return '<div class="price-box"><div class="price-label">'+l+'</div><div class="price-value">'+v+'</div></div>';}
+function prowc(l,v){return '<div class="pr-row" style="border-color:rgba(255,255,255,0.3);"><span>'+l+':</span><span>'+v+'</span></div>';}
+
+// ================================================================
+// RESET
+// ================================================================
+function reset(){
+  resetConfiguratore();
+  document.getElementById('quantita').value=1;
+  document.getElementById('pesoBobina').value=config.peso||16;
+  document.getElementById('ricarico').value=35;
+  document.getElementById('prezzoRif').value='';
+  buildConfiguratore();
+}
+
+// ================================================================
+// CARRELLO
+// ================================================================
+function aggiungiCarrello(){
+  if(!prev)return;
+  prev.id=Date.now();prev.ts=new Date().toLocaleString('it-IT');
+  cart.push(prev);localStorage.setItem('cart_estensibile',JSON.stringify(cart));
+  document.getElementById('cartCount').textContent=cart.length;
+  alert('✅ Preventivo aggiunto al carrello!');
+}
+function openCart(){document.getElementById('cartModal').classList.add('active');renderCart();}
+function closeCart(){document.getElementById('cartModal').classList.remove('active');}
+function renderCart(){
+  var ci=document.getElementById('cartItems'),cf=document.getElementById('cartFooter');
+  if(cart.length===0){ci.innerHTML='<div class="empty-cart">🛒 Carrello vuoto</div>';cf.innerHTML='';return;}
+  var h='',tot=0;
+  cart.forEach(function(it,i){
+    tot+=it.pvt;
+    h+='<div class="cart-item"><div class="cart-item-header"><div class="cart-item-title">'+(i+1)+'. '+it.art+'</div>';
+    h+='<button class="cart-item-delete" onclick="delCart('+i+')">🗑️ Elimina</button></div>';
+    h+='<div class="cart-detail-grid">';
+    h+=cdi('Prestiro',it.prestiro)+cdi('Spessore',it.spessore)+cdi('Peso/bob.',it.peso+' kg')+cdi('N° bobine',it.q);
+    h+=cdi('Prezzo acq. €/kg','€'+it.pm.toFixed(3))+cdi('Ricarico',it.r+'%')+cdi('Prezzo/bob.','€'+it.pvu.toFixed(2))+cdi('Totale','€'+it.pvt.toFixed(2));
+    h+='</div></div>';
+  });
+  ci.innerHTML=h;
+  var f='<div class="cart-total">';
+  f+='<div class="cart-total-row"><span>N° Preventivi:</span><strong>'+cart.length+'</strong></div>';
+  f+='<div class="cart-total-row"><span>TOTALE CARRELLO:</span><strong>€'+tot.toFixed(2)+'</strong></div></div>';
+  f+='<div class="action-buttons"><button class="btn btn-success" onclick="exportCSV()">📊 Esporta CSV</button>';
+  f+='<button class="btn btn-danger" onclick="clearCart()">🗑️ Svuota Carrello</button></div>';
+  cf.innerHTML=f;
+}
+function cdi(l,v){return '<div class="cart-detail-item"><span class="cart-detail-label">'+l+':</span><span class="cart-detail-value">'+v+'</span></div>';}
+function delCart(i){if(confirm('Rimuovere?')){cart.splice(i,1);localStorage.setItem('cart_estensibile',JSON.stringify(cart));document.getElementById('cartCount').textContent=cart.length;renderCart();}}
+function clearCart(){if(confirm('Svuotare tutto?')){cart=[];localStorage.setItem('cart_estensibile',JSON.stringify(cart));document.getElementById('cartCount').textContent=0;renderCart();}}
+function exportCSV(){
+  var csv='N,Articolo,Fornitore,Prestiro,Spessore,Peso/Bob(kg),Q(bob),Base€/kg,Delta€/kg,MaggFissi€/kg,MaggPct€/kg,Totale€/kg,Prezzo/bob€,Totale€,Ricarico%,Maggiorazioni\n';
+  cart.forEach(function(it,i){
+    var mg=it.magg&&it.magg.length?it.magg.join('; '):'Nessuna';
+    csv+=(i+1)+',\"'+it.art+'\",'+it.forn+',\"'+it.prestiro+'\",\"'+it.spessore+'\",'+it.peso+','+it.q+','+
+      it.base.toFixed(3)+','+it.delta.toFixed(3)+','+(it.extra_fisso||0).toFixed(3)+','+(it.extra_pct_val||0).toFixed(3)+','+
+      it.pm.toFixed(3)+','+it.pvu.toFixed(2)+','+it.pvt.toFixed(2)+','+it.r+',\"'+mg+'\"\n';
+  });
+  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='preventivi_estensibile_'+Date.now()+'.csv';a.click();
+}
+</script>
+</body>
+</html>
