@@ -1,0 +1,37 @@
+[
+  {
+    "id": "sacchetti",
+    "icon": "📦",
+    "title": "Configuratore Sacchetti Professionale",
+    "desc": "Sistema completo con calcoli tecnici dettagliati, margini dinamici, gestione materiali e configurazione estrusione.",
+    "file": "Sacchetti professionale.html"
+  },
+  {
+    "id": "nastro",
+    "icon": "📏",
+    "title": "Nastro Adesivo",
+    "desc": "Configuratore dedicato per preventivi nastro adesivo con calcoli specifici per rotoli e formati.",
+    "file": "Nastro adesivo.html"
+  },
+  {
+    "id": "film",
+    "icon": "🧱",
+    "title": "Film Estensibile",
+    "desc": "Configuratore per preventivi film estensibile.",
+    "file": "Film estensibile.html"
+  },
+  {
+    "id": "c1776154648453",
+    "icon": "📦",
+    "title": "Bolle aria / Pe-Espanso",
+    "desc": "",
+    "file": ""
+  },
+  {
+    "id": "c1776154654281",
+    "icon": "📦",
+    "title": "Reggia",
+    "desc": "",
+    "file": ""
+  }
+]
