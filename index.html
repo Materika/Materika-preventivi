@@ -108,6 +108,17 @@ header{background:var(--nero);border-radius:18px;margin-bottom:48px;overflow:hid
 .bd{width:100%;padding:10px;border-radius:7px;background:#fff0f0;border:1px solid #ffbbbb;color:#b03030;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12.5px;cursor:pointer;transition:background .14s}
 .bd:hover{background:#ffd4d4}
 
+/* SAVE BANNER */
+#save-banner{position:fixed;bottom:0;left:0;right:0;background:#1a1a00;border-top:2px solid var(--accent);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:9998;transform:translateY(100%);transition:transform .3s;}
+#save-banner.on{transform:translateY(0)}
+.banner-text{font-family:"Space Mono",monospace;font-size:11px;color:var(--accent);letter-spacing:0.5px}
+.banner-text strong{color:#fff}
+.banner-btns{display:flex;gap:8px;flex-shrink:0}
+.banner-exp{padding:8px 16px;background:var(--accent);color:var(--nero);border:none;border-radius:7px;font-family:"Space Grotesk",sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:background .15s}
+.banner-exp:hover{background:#b8ee00}
+.banner-close{padding:8px 14px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:7px;font-family:"Space Grotesk",sans-serif;font-size:12px;cursor:pointer;transition:all .15s}
+.banner-close:hover{color:#fff;border-color:rgba(255,255,255,0.4)}
+
 /* TOAST */
 .toast{position:fixed;bottom:26px;right:26px;background:var(--nero);color:var(--accent);padding:11px 18px;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;z-index:99999;opacity:0;transform:translateY(8px);transition:all .22s;pointer-events:none}
 .toast.on{opacity:1;transform:translateY(0)}
@@ -182,6 +193,14 @@ header{background:var(--nero);border-radius:18px;margin-bottom:48px;overflow:hid
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div id="save-banner">
+  <span class="banner-text">⚠ <strong>Hai modificato le schede.</strong> Esporta il file JSON e caricalo su GitHub per aggiornare tutti.</span>
+  <div class="banner-btns">
+    <button class="banner-exp" onclick="expCfg();hideSaveBanner()">⬇ Esporta materika_config.json</button>
+    <button class="banner-close" onclick="hideSaveBanner()">Ignora</button>
+  </div>
+</div>
 
 <div class="wrap" id="main-content" style="display:none">
   <header>
@@ -259,8 +278,21 @@ const DEF=[
   {id:'nastro',icon:'📏',title:'Nastro Adesivo',desc:'Configuratore dedicato per preventivi nastro adesivo con calcoli specifici per rotoli e formati.',file:'materika_nastro.html'}
 ];
 let cards=[];
-function load(){const s=localStorage.getItem('mtk4');cards=s?JSON.parse(s):JSON.parse(JSON.stringify(DEF))}
-function save(){localStorage.setItem('mtk4',JSON.stringify(cards))}
+
+async function load(){
+  try{
+    const r=await fetch("materika_config.json?v="+Date.now());
+    if(r.ok){
+      const data=await r.json();
+      if(Array.isArray(data)&&data.length>0){cards=data;localStorage.setItem("mtk4",JSON.stringify(cards));render();return;}
+    }
+  }catch(e){}
+  const s=localStorage.getItem("mtk4");
+  cards=s?JSON.parse(s):JSON.parse(JSON.stringify(DEF));
+  render();
+}
+
+function save(){localStorage.setItem("mtk4",JSON.stringify(cards));showSaveBanner();}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
 function render(){
@@ -366,7 +398,15 @@ function toast(msg){
   setTimeout(()=>t.classList.remove('on'),2500);
 }
 document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeM()});
-load();render();
+function showSaveBanner(){
+  const b=document.getElementById('save-banner');
+  if(b){b.classList.add('on');}
+}
+function hideSaveBanner(){
+  const b=document.getElementById('save-banner');
+  if(b){b.classList.remove('on');}
+}
+load();
 </script>
 </body>
 </html>
