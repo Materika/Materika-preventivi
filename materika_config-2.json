@@ -1,0 +1,44 @@
+[
+  {
+    "id": "tecnico",
+    "icon": "📦",
+    "title": "Configuratore Sacchi/Bobine Tecnico",
+    "desc": "Sistema completo con calcoli tecnici dettagliati, margini dinamici, gestione materiali e configurazione estrusione.",
+    "file": "Sacchetti professionale.html"
+  },
+  {
+    "id": "percentuale",
+    "icon": "📊",
+    "title": "Configuratore Sacchi %",
+    "desc": "Preventivazione semplificata basata su percentuali e markup, ideale per preventivi rapidi.",
+    "file": "Sacchi %.html"
+  },
+  {
+    "id": "nastro",
+    "icon": "📏",
+    "title": "Nastro Adesivo",
+    "desc": "Configuratore dedicato per preventivi nastro adesivo con calcoli specifici per rotoli e formati.",
+    "file": "Nastro adesivo.html"
+  },
+  {
+    "id": "c1776151229381",
+    "icon": "📦",
+    "title": "Estensibile",
+    "desc": "",
+    "file": "preventivatore_estensibile_v1.2"
+  },
+  {
+    "id": "c1776151305253",
+    "icon": "📦",
+    "title": "Bolle aria e PE espanso",
+    "desc": "",
+    "file": ""
+  },
+  {
+    "id": "c1776151311608",
+    "icon": "📦",
+    "title": "Reggia",
+    "desc": "",
+    "file": ""
+  }
+]
