@@ -1,17 +1,10 @@
 [
   {
-    "id": "tecnico",
+    "id": "sacchetti",
     "icon": "📦",
-    "title": "Configuratore Sacchi/Bobine Tecnico",
+    "title": "Configuratore Sacchetti Professionale",
     "desc": "Sistema completo con calcoli tecnici dettagliati, margini dinamici, gestione materiali e configurazione estrusione.",
     "file": "Sacchetti professionale.html"
-  },
-  {
-    "id": "percentuale",
-    "icon": "📊",
-    "title": "Configuratore Sacchi %",
-    "desc": "Preventivazione semplificata basata su percentuali e markup, ideale per preventivi rapidi.",
-    "file": "Sacchi %.html"
   },
   {
     "id": "nastro",
@@ -21,24 +14,10 @@
     "file": "Nastro adesivo.html"
   },
   {
-    "id": "c1776151229381",
-    "icon": "📦",
-    "title": "Estensibile",
-    "desc": "",
+    "id": "film",
+    "icon": "🧱",
+    "title": "Film Estensibile",
+    "desc": "Configuratore per preventivi film estensibile.",
     "file": "Film estensibile.html"
-  },
-  {
-    "id": "c1776151305253",
-    "icon": "📦",
-    "title": "Bolle aria e PE espanso",
-    "desc": "",
-    "file": ""
-  },
-  {
-    "id": "c1776151311608",
-    "icon": "📦",
-    "title": "Reggia",
-    "desc": "",
-    "file": ""
   }
 ]
